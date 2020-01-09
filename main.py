@@ -16,7 +16,7 @@ def stringMaker_and_label(data):
     string_label_data = []
     for row in data:
         label = False
-        tag = row[0]
+        tag = row[-1]
         if tag == 'yes':
             label = True
         s =''.join([str(x) for x in row[:-1]])
@@ -48,13 +48,51 @@ def make_train_dev(path):
     file.close()
 
 def hamming(s1, s2):
-    return
+    if len(s1) != len(s2):
+        raise ValueError("Undefined for sequences of unequal length.")
+    return sum(el1 != el2 for el1, el2 in zip(s1, s2))
+
+class knn:
+    def __init__(self, train, k, dev):
+        self.train = train
+        self.k = k
+        self.dev = dev
+    def knn_a(self):
+        accuracy = 0
+        for sample in self.dev:
+            distace_sample = self.compute_hamming(sample[0])
+            distace_sample.sort()
+            yes = 0
+            no = 0
+            for i in range(0,self.k):
+                if (distace_sample[i][1]):
+                    yes+=1
+                else:
+                    no +=1
+            label = True
+            if no > yes:
+                label = False
+            if label == sample[1]:
+                accuracy +=1
+        print('accuracy: ' + str(accuracy/len(self.dev)*100))
+
+
+
+    def compute_hamming(self,sample):
+        distace_sample=[]
+        for t in self.train:
+            distace_sample.append((hamming(t[0], sample),t[1]))
+        return distace_sample
+
 
 
 if __name__ == '__main__':
-    path = parser(argv[1])
-    make_train_dev(argv[1])
-    s = stringMaker_and_label(path)
-    num_lines = sum(1 for line in open(argv[1]))
-    print(int(num_lines *0.2))
-    print(s[5][0])
+    make_train_dev('./dataset.txt')
+    train_p = parser(argv[1])
+    dev_p = parser(argv[2])
+    train = stringMaker_and_label(train_p)
+    dev = stringMaker_and_label(dev_p)
+    knn = knn(train,5,dev)
+    knn.knn_a()
+
+
