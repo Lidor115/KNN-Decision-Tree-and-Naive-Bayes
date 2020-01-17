@@ -8,7 +8,7 @@ def dev_train_sep(k, data):
     div_k = []
     all_data_number = (len(data))
     fold = []
-    total = 0.
+    total = 0
     one_fold = int(all_data_number / k)
     for i in range(k - 1):
         fold.append(one_fold)

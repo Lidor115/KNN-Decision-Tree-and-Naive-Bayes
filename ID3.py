@@ -15,36 +15,33 @@ class ID3:
         self.best = None
 
     def DTL(self, examples, default, attributes):
-        C_True, C_False, = self.checkClassification(examples)
+        C_False, C_True , = self.checkClassification(examples)
         total_examples = C_True + C_False
         if len(examples) == 0:
-            return Node(default, self.father,3)
+            return default
         elif C_True == total_examples:
-            return Node("yes", self.father,3)
+            return "yes"
         elif C_False == total_examples:
-            return Node("no", self.father,3)
+            return "no"
         elif len(attributes) == 0:
             res = "no"
             if self.Mode(C_False, C_True):
-                res ="yes"
-            return Node(res, self.father,3)
+                res = "yes"
+            return res
         else:
-            best = self.ChooseAttribute(copy.deepcopy(examples), C_False, C_True, attributes)
-            features = self.get_Features(copy.deepcopy(examples), best)
-            best_node = Node(best, self.father,1)
-            index = F2I[best]
+            self.best = self.ChooseAttribute(copy.deepcopy(examples), C_False, C_True, attributes)
+            features = self.get_Features(copy.deepcopy(examples), self.best)
+            index = F2I[self.best]
             for v_i in features:
                 examples_i = list(filter(lambda x: x[0][index] == v_i, copy.deepcopy(examples)))
-                c_t, c_f = self.checkClassification(copy.deepcopy(examples))
-                sub_node = Node(v_i, self.father,2)
+                c_f, c_t = self.checkClassification(copy.deepcopy(examples))
                 newAtt = copy.deepcopy(attributes)
-                if best in newAtt:
-                    del newAtt[best]
-                self.father = Node(v_i, best_node,2)
-                self.best = copy.deepcopy(self.father)
-                subtree = self.DTL(examples_i, self.Mode(c_t, c_f), newAtt)
-                self.addNode(subtree)
-            return self.tree
+                if self.best in self.attributes:
+                    del self.attributes[self.best]
+                dtl  = ID3(self.F2I,self.attributes)
+                subtree = dtl.DTL(examples_i, self.Mode(c_t, c_f), self.attributes)
+                self.addNode(Node(v_i,subtree))
+            return self
 
     def get_Features(self, examples, attribute):
         index = F2I[attribute]
@@ -71,22 +68,6 @@ class ID3:
     def addNode(self, node):
         if not node in self.tree:
             self.tree.append(node)
-        return
-
-    def printTree(self, subtree):
-        all_lists = []
-        for leaf in subtree:
-            if isinstance(leaf, Node):
-                listLeaf = []
-                x = leaf
-                s = ""
-                while x:
-                    listLeaf.append(x)
-                    x = x.father
-                listLeaf.reverse()
-                print(listLeaf)
-                all_lists.append(listLeaf)
-
         return
 
     def CalcPerFeature(self, examples, index, feature):
@@ -127,6 +108,33 @@ class ID3:
             res = 'yes'
         return res
 
+    @staticmethod
+    def print_tree(tree, i=0):
+        subtrees = list(tree.tree)
+        subtrees.sort(key=ID3.sort_by_label)
+        for subtree_index in range(len(subtrees)):
+            if i != 0:
+                print("|", end='')
+            print(str(tree.best) + "=" + subtrees[subtree_index].label, end='')
+            if subtrees[subtree_index].subtree == 'yes' or subtrees[subtree_index].subtree == 'no':
+                print(":" + subtrees[subtree_index].subtree, end="\n")
+                if subtree_index == len(subtrees) - 1:
+                    i -= 1
+                for j in range(i):
+                    print('\t', end='')
+            else:
+                i += 1
+                print(end='\n')
+                for j in range(i):
+                    print('\t', end='')
+                # print("|", end='')
+                ID3.print_tree(subtrees[subtree_index].subtree, i)
+                i -= 1
+
+    @staticmethod
+    def sort_by_label(subtree):
+        return subtree.label
+
 
 if __name__ == '__main__':
     train_p = parser(argv[1])
@@ -136,5 +144,5 @@ if __name__ == '__main__':
     default, n = max_can_eat(train)
     d = ID3(F2I, copy.deepcopy(att))
     tree = d.DTL(copy.deepcopy(all_ex), default, copy.deepcopy(att))
-    d.printTree(d.tree)
+    d.print_tree(tree)
     print('hi')
