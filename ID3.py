@@ -8,18 +8,19 @@ from main import parser, stringMaker_and_label, make_examples, max_can_eat
 
 
 class ID3:
-    def __init__(self, F2I, attributes):
+    def __init__(self, F2I, attributes, default):
         self.F2I = F2I
         self.tree = []
         self.father = None
         self.attributes = attributes
         self.best = None
+        self.default = default
 
     def DTL(self, examples, default, attributes):
         C_False, C_True, = self.checkClassification(examples)
         total_examples = C_True + C_False
         if len(examples) == 0:
-            return default
+            return self.default
         elif C_True == total_examples:
             return "yes"
         elif C_False == total_examples:
@@ -38,8 +39,8 @@ class ID3:
                 c_f, c_t = self.checkClassification(copy.deepcopy(examples))
                 newAtt = copy.deepcopy(self.attributes)
                 del newAtt[self.best]
-                dtl = ID3(self.F2I, newAtt)
-                subtree = dtl.DTL(examples_i, self.Mode(c_t, c_f), newAtt)
+                dtl = ID3(self.F2I, newAtt,self.Mode(c_f, c_t))
+                subtree = dtl.DTL(examples_i, self.Mode(c_f, c_t), newAtt)
                 self.addNode(Node(v_i, subtree))
             return self
 
@@ -52,7 +53,7 @@ class ID3:
         # the first entropy
         total = C_True + C_False
         max_attribute = ""
-        maxentropy = 0.0
+        maxentropy = -1
         for attribute in attributes:
             entropy = self.entropy(C_False, C_True)
             features = self.get_Features(examples, attribute)
@@ -147,7 +148,7 @@ class ID3:
         example_best = example[0][best_index]
         subtree_labels = [subtree.label for subtree in tree.tree]
         if example_best not in subtree_labels:
-            return default
+            return tree.default
         subtree_index = subtree_labels.index(example_best)
         return ID3.predict(tree.tree[subtree_index].subtree, F2I, example,attributes,default)
     @staticmethod
@@ -173,9 +174,9 @@ if __name__ == '__main__':
     default_yes_no = "no"
     if default:
         default_yes_no = "yes"
-    d = ID3(F2I, copy.deepcopy(att))
-    #tree = d.DTL(copy.deepcopy(all_ex), default_yes_no, copy.deepcopy(att))
-    #d.print_tree(tree)
+    d = ID3(F2I, copy.deepcopy(att),default)
+    tree = d.DTL(copy.deepcopy(all_ex), default_yes_no, copy.deepcopy(att))
+    d.print_tree(tree)
     k=5
     accuracy = 0
     data = dev_train_sep(k,data=all_ex)
@@ -185,13 +186,13 @@ if __name__ == '__main__':
         for j in range(k):
             if not j == i:
                 train += data[j]
-        d = ID3(F2I, copy.deepcopy(att))
-        tree = d.DTL(copy.deepcopy(train), default_yes_no, copy.deepcopy(att))
         default, n =max_can_eat(train)
         mode = "no"
         if default:
             mode = "yes"
-        acc= ID3.get_accuracy(tree=tree,test=dev,F2I=F2I, attributes=att, default= mode)
+        d = ID3(F2I, (att),mode)
+        tree = d.DTL(copy.deepcopy(train), mode,copy.deepcopy(att))
+        acc= ID3.get_accuracy(tree=copy.deepcopy(tree),test=copy.deepcopy(dev),F2I=F2I, attributes=copy.deepcopy(att), default= mode)
         accuracy +=acc
         print(acc)
     print("total : " + str(accuracy/k*100))
