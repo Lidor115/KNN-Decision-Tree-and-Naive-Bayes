@@ -8,18 +8,19 @@ from main import parser, stringMaker_and_label, make_examples, max_can_eat
 
 
 class ID3:
-    def __init__(self, F2I, attributes, default):
+    def __init__(self, F2I, attributes, default, examples):
         self.F2I = F2I
         self.tree = []
         self.father = None
         self.attributes = attributes
         self.best = None
         self.default = default
+        self.examples = examples
 
-    def DTL(self, examples, default, attributes):
-        C_False, C_True, = self.checkClassification(examples)
-        total_examples = C_True + C_False
-        if len(examples) == 0:
+    def DTL(self):
+        C_False, C_True, = self.checkClassification(self.examples)
+        total_examples = len(self.examples)
+        if len(self.examples) == 0:
             return self.default
         elif C_True == total_examples:
             return "yes"
@@ -31,16 +32,16 @@ class ID3:
                 res = "yes"
             return res
         else:
-            self.best = self.ChooseAttribute(copy.deepcopy(examples), C_False, C_True, self.attributes)
-            features = self.get_Features(copy.deepcopy(examples), self.best)
+            self.best = self.ChooseAttribute(self.examples, C_False, C_True, self.attributes)
+            features = self.attributes[self.best]
             index = F2I[self.best]
             for v_i in features:
-                examples_i = list(filter(lambda x: x[0][index] == v_i, copy.deepcopy(examples)))
-                c_f, c_t = self.checkClassification(copy.deepcopy(examples))
+                examples_i = list(filter(lambda x: x[0][index] == v_i, self.examples))
+                c_f, c_t = self.checkClassification(self.examples)
                 newAtt = copy.deepcopy(self.attributes)
                 del newAtt[self.best]
-                dtl = ID3(self.F2I, newAtt,self.Mode(c_f, c_t))
-                subtree = dtl.DTL(examples_i, self.Mode(c_f, c_t), newAtt)
+                dtl = ID3(self.F2I, newAtt,self.Mode(c_f, c_t),examples_i)
+                subtree = dtl.DTL()
                 self.addNode(Node(v_i, subtree))
             return self
 
@@ -53,17 +54,21 @@ class ID3:
         # the first entropy
         total = C_True + C_False
         max_attribute = ""
-        maxentropy = -1
+        maxentropy = 0
         for attribute in attributes:
             entropy = self.entropy(C_False, C_True)
-            features = self.get_Features(examples, attribute)
+            features = self.attributes[attribute]
             index = self.F2I[attribute]
             for feature in features:
-                c_t, c_f = self.CalcPerFeature(examples, index, feature)
+                c_f, c_t, total_f, total_t= self.CalcPerFeature(examples, index, feature)
                 entropy -= ((c_t + c_f) / total) * self.entropy(c_f, c_t)
-            if entropy >= maxentropy:
+                #print(entropy,c_f,c_t,total)
+            if entropy > maxentropy:
                 maxentropy = entropy
                 max_attribute = attribute
+            elif entropy == maxentropy and entropy == 0.0 and max_attribute == '':
+                max_attribute = attribute
+                maxentropy = entropy
         return max_attribute
 
     def addNode(self, node):
@@ -74,15 +79,15 @@ class ID3:
     def CalcPerFeature(self, examples, index, feature):
         result_True = (list(filter(lambda x: x[1] == True, examples)))
         result_False = (list(filter(lambda x: x[1] == False, examples)))
+        total_f = len(result_False)
+        total_t =len(result_True)
         t = len(list(filter(lambda x: x[0][index] == feature, result_True)))
         f = len(list(filter(lambda x: x[0][index] == feature, result_False)))
-        t = t / len(result_True)
-        f = f / len(result_False)
-        return t, f
+        return f, t, total_f, total_t
 
     @staticmethod
     def entropy(C_False, C_True):
-        total = C_False + C_True
+        total  = C_False + C_True
         if total == 0:
             return 0
         t_ex = C_True / total
@@ -90,12 +95,12 @@ class ID3:
         if f_ex == 0 and t_ex == 0:
             return 0
         elif t_ex == 0:
-            return -(C_False * math.log2(f_ex))
+            return -(f_ex * math.log2(f_ex))
         elif f_ex == 0:
             return -(t_ex * math.log2(t_ex))
         return -(t_ex * math.log2(t_ex) + f_ex * math.log2(f_ex))
-
-    def checkClassification(self, examples):
+    @staticmethod
+    def checkClassification(examples):
         C_True = 0
         C_False = 0
         for example in examples:
@@ -147,8 +152,6 @@ class ID3:
         best_index = F2I[tree.best]
         example_best = example[0][best_index]
         subtree_labels = [subtree.label for subtree in tree.tree]
-        if example_best not in subtree_labels:
-            return tree.default
         subtree_index = subtree_labels.index(example_best)
         return ID3.predict(tree.tree[subtree_index].subtree, F2I, example,attributes,default)
     @staticmethod
@@ -174,8 +177,8 @@ if __name__ == '__main__':
     default_yes_no = "no"
     if default:
         default_yes_no = "yes"
-    d = ID3(F2I, copy.deepcopy(att),default)
-    tree = d.DTL(copy.deepcopy(all_ex), default_yes_no, copy.deepcopy(att))
+    d = ID3(F2I, copy.deepcopy(att),default,copy.deepcopy(all_ex))
+    tree = d.DTL()
     d.print_tree(tree)
     k=5
     accuracy = 0
@@ -190,9 +193,9 @@ if __name__ == '__main__':
         mode = "no"
         if default:
             mode = "yes"
-        d = ID3(F2I, (att),mode)
-        tree = d.DTL(copy.deepcopy(train), mode,copy.deepcopy(att))
-        acc= ID3.get_accuracy(tree=copy.deepcopy(tree),test=copy.deepcopy(dev),F2I=F2I, attributes=copy.deepcopy(att), default= mode)
+        d = ID3(F2I, copy.deepcopy(att),mode, copy.deepcopy(train))
+        tree = d.DTL()
+        acc= ID3.get_accuracy(tree=copy.deepcopy(tree),test=copy.deepcopy(dev),F2I=copy.deepcopy(F2I), attributes=copy.deepcopy(att), default= mode)
         accuracy +=acc
         print(acc)
     print("total : " + str(accuracy/k*100))
