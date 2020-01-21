@@ -1,24 +1,7 @@
 import copy
 from sys import argv
 
-from main import parser, make_examples, stringMaker_and_label, max_can_eat
-
-
-def dev_train_sep(k, data):
-    div_k = []
-    all_data_number = (len(data))
-    fold = []
-    total = 0
-    one_fold = int(all_data_number / k)
-    for i in range(k - 1):
-        fold.append(one_fold)
-        total += one_fold
-    fold.append(int(all_data_number - total))
-    for i in range(k):
-        f = data[:fold[i]]
-        data = data[fold[i]:]
-        div_k.append(f)
-    return div_k
+from utils import parser, make_examples, stringMaker_and_label, max_can_eat, dev_train_sep, parseAttributes
 
 
 class NaiveByes:
@@ -46,7 +29,7 @@ class NaiveByes:
                 pred = True
             if pred  == d[1]:
                 acc +=1
-        return acc/len(self.dev)*100
+        return acc/len(self.dev)
 
 
     def calcProbability(self):
@@ -67,13 +50,9 @@ class NaiveByes:
                 prob_no = f/total_f
                 self.probs_yes[(index,feature)] = prob_yes
                 self.probs_no[(index,feature)] = prob_no
-
-if __name__ == '__main__':
-    train_p = parser(argv[1])
+def Naive_Byse_k_folds(train_p):
     all_ex, att = make_examples(copy.deepcopy(train_p))
-    train_p_T = [[train_p[j][i] for j in range(len(train_p))] for i in range(len(train_p[0]))]
-    train, F2I = stringMaker_and_label(copy.deepcopy(train_p))
-    default, n = max_can_eat(train)
+    F2I = parseAttributes(train_p[0])
     k=5
     accuracy = 0
     data = dev_train_sep(k,data=all_ex)
@@ -86,5 +65,6 @@ if __name__ == '__main__':
         naive_bayes = NaiveByes(train,dev,attributes=att,F2I=F2I)
         acc= naive_bayes.naiveBayes()
         accuracy +=acc
-        print(acc)
-    print("total : " + str(accuracy/k))
+    avg_acu = "{0:.2f}".format(accuracy / k)
+    print("Naive Byse : " + str(avg_acu))
+    return avg_acu

@@ -2,9 +2,8 @@ import copy
 import math
 from sys import argv
 
-from NaiveBayes import dev_train_sep
 from Node import Node
-from main import parser, stringMaker_and_label, make_examples, max_can_eat
+from utils import make_examples, parser, stringMaker_and_label, max_can_eat, dev_train_sep, parseAttributes
 
 
 class ID3:
@@ -34,7 +33,7 @@ class ID3:
         else:
             self.best = self.ChooseAttribute(self.examples, C_False, C_True, self.attributes)
             features = self.attributes[self.best]
-            index = F2I[self.best]
+            index = self.F2I[self.best]
             for v_i in features:
                 examples_i = list(filter(lambda x: x[0][index] == v_i, self.examples))
                 c_f, c_t = self.checkClassification(self.examples)
@@ -167,19 +166,21 @@ class ID3:
                 accuracy +=1
         return accuracy/len(test)
 
-
-if __name__ == '__main__':
-    train_p = parser(argv[1])
+def ID3_print_Tree(train_p):
     all_ex, att = make_examples(copy.deepcopy(train_p))
-    train_p_T = [[train_p[j][i] for j in range(len(train_p))] for i in range(len(train_p[0]))]
-    train, F2I = stringMaker_and_label(copy.deepcopy(train_p))
-    default, n = max_can_eat(train)
+    F2I = parseAttributes(train_p[0])
+    default, n = max_can_eat(all_ex)
     default_yes_no = "no"
     if default:
         default_yes_no = "yes"
-    d = ID3(F2I, copy.deepcopy(att),default,copy.deepcopy(all_ex))
+    d = ID3(F2I, copy.deepcopy(att),default_yes_no,copy.deepcopy(all_ex))
     tree = d.DTL()
     d.print_tree(tree)
+
+
+def ID3_k_folds(train_p):
+    all_ex, att = make_examples(copy.deepcopy(train_p))
+    F2I = parseAttributes(train_p[0])
     k=5
     accuracy = 0
     data = dev_train_sep(k,data=all_ex)
@@ -197,6 +198,9 @@ if __name__ == '__main__':
         tree = d.DTL()
         acc= ID3.get_accuracy(tree=copy.deepcopy(tree),test=copy.deepcopy(dev),F2I=copy.deepcopy(F2I), attributes=copy.deepcopy(att), default= mode)
         accuracy +=acc
-        print(acc)
-    print("total : " + str(accuracy/k*100))
+    avg_acu = "{0:.2f}".format(accuracy / k)
+    print("ID3 : " + str(avg_acu))
+    return avg_acu
+
+
 
