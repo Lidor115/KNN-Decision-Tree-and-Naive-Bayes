@@ -71,3 +71,5 @@ def calc(train_p, dev_p,k):
     return avg_acu
 
 
+
+

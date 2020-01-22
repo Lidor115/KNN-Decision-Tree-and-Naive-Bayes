@@ -129,14 +129,9 @@ class ID3:
                 print(":" + subtrees[subtree_index].subtree, end="\n")
                 if subtree_index == len(subtrees) - 1:
                     i -= 1
-                # for j in range(i):
-                #     print('\t', end='')
             else:
                 i += 1
                 print(end='\n')
-                # for j in range(i):
-                #     print('\t', end='')
-                # print("|", end='')
                 ID3.print_tree(subtrees[subtree_index].subtree, i)
                 i -= 1
 
@@ -175,7 +170,8 @@ def ID3_print_Tree(train_p):
         default_yes_no = "yes"
     d = ID3(F2I, copy.deepcopy(att),default_yes_no,copy.deepcopy(all_ex))
     tree = d.DTL()
-    d.print_tree(tree)
+    #d.print_tree(tree)
+    return tree
 
 
 def ID3_k_folds(train_p):
@@ -202,5 +198,27 @@ def ID3_k_folds(train_p):
     print("ID3 : " + str(avg_acu))
     return avg_acu
 
+def write_tree_writer(tree,file):
+    with open(file,"a") as f:
+        write_tree(tree,f)
+    f.close()
 
-
+def write_tree(tree,file,i=0):
+    subtrees = list(tree.tree)
+    subtrees.sort(key=ID3.sort_by_label)
+    for subtree_index in range(len(subtrees)):
+        if i != 0:
+            for j in range(i):
+                file.write('\t')
+            file.write("|")
+        file.write("{0}={1}".format(str(tree.best),subtrees[subtree_index].label))
+        #file.write(str(tree.best) +"="+  subtrees[subtree_index].label, end='')
+        if subtrees[subtree_index].subtree == 'yes' or subtrees[subtree_index].subtree == 'no':
+            file.write(":{0}\n".format(subtrees[subtree_index].subtree))
+            if subtree_index == len(subtrees) - 1:
+                i -= 1
+        else:
+            i += 1
+            file.write('\n')
+            write_tree(subtrees[subtree_index].subtree,file, i)
+            i -= 1

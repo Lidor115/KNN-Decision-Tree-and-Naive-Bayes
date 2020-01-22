@@ -1,3 +1,6 @@
+from random import randint
+
+
 def parser(path):
     data = []
     with open(path) as file:
@@ -72,7 +75,7 @@ def make_train_dev(path):
             dev_indexes.append(x)
     with open(path) as file:
         rows = file.readlines()
-        with open('dev.txt', 'w+') as dev_file:
+        with open('test.txt', 'w+') as dev_file:
             with open('train.txt', 'w+') as train_file:
                 dev_file.write(rows[0])
                 train_file.write(rows[0])
