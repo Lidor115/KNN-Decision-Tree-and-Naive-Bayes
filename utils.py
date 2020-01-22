@@ -2,6 +2,11 @@ from random import randint
 
 
 def parser(path):
+    """
+    parse the date into eamples and labels
+    :param path:the path of the file we want to parse
+    :return: the parsed data
+    """
     data = []
     with open(path) as file:
         rows = file.readlines()
@@ -11,6 +16,11 @@ def parser(path):
     return data
 
 def max_can_eat(examples):
+    """
+    check ratio and if there are more true or false examples over the test-set
+    :param examples:
+    :return: True or False (if there are more true or false) and the ratio
+    """
     t = 0
     f = 0
     for example in examples:
@@ -19,7 +29,13 @@ def max_can_eat(examples):
         else:
             f += 1
     return t >= f, (t / (t + f))
+
 def make_examples(train_p):
+    """
+    create from the data a tupple of (date, label, index)
+    :param train_p: the parsed data
+    :return: tupple of (date, label, index) and all the attributes
+    """
     attributes = {}
     train_p_T = [[train_p[j][i] for j in range(len(train_p))] for i in range(len(train_p[0]))]
     train_p_T.pop(-1)
@@ -39,6 +55,11 @@ def make_examples(train_p):
 
 
 def parseAttributes(first_line):
+    """
+    parsed the first line and returns all attributes
+    :param first_line: the first line
+    :return: all attributes
+    """
     index = 0
     all_attr = {}
     for a in first_line[:-1]:
@@ -47,9 +68,12 @@ def parseAttributes(first_line):
     return all_attr
 
 
-
-
 def stringMaker_and_label(data):
+    """
+    get date and return (string_data,label,index)
+    :param data: all the data (train or test_
+    :return: (string_data,label,index) as tupple
+    """
     first_line = data.pop(0)
     string_label_data = []
     attributes = parseAttributes(first_line)
@@ -66,6 +90,11 @@ def stringMaker_and_label(data):
 
 
 def make_train_dev(path):
+    """
+    get data set and randomly separate to train and test set
+    :param path: path to the dataset file
+    :return: train and test set files
+    """
     num_lines = sum(1 for line in open(path))
     num_dev = int(num_lines * 0.2)
     dev_indexes = []
@@ -91,12 +120,24 @@ def make_train_dev(path):
 
 
 def hamming(s1, s2):
+    """
+    hamming distance (from wikipedia)
+    :param s1: string 1
+    :param s2: string 2
+    :return: the hamming distance
+    """
     if len(s1) != len(s2):
         raise ValueError("Undefined for sequences of unequal length.")
     return sum(el1 != el2 for el1, el2 in zip(s1, s2))
 
 
 def dev_train_sep(k, data):
+    """
+    for k-folds - separate the dataset to train and dev(test) set
+    :param k: how many folds
+    :param data: the dataset
+    :return: the data divide into k
+    """
     div_k = []
     all_data_number = (len(data))
     fold = []
