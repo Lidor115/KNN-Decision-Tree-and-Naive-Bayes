@@ -26,7 +26,7 @@ def write_original_dataset():
     """
     train_p = parser(argv[1])
     tree = ID3_print_Tree(copy.deepcopy(train_p))
-    with open("accuracies.txt", 'w+') as file_acc:
+    with open("accuracy.txt", 'w+') as file_acc:
          write_Accuracies(copy.deepcopy(train_p), file_acc)
     file_acc.close()
     with open('tree.txt',"w+") as file:
@@ -51,4 +51,5 @@ def write_and_calc():
 
 
 if __name__ == '__main__':
-    write_and_calc()
+    #write_and_calc()
+    write_original_dataset()
