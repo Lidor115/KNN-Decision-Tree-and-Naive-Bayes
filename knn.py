@@ -62,7 +62,7 @@ def knn_k_folds(train_p):
     print("KNN : " + str(avg_acu))
     return avg_acu
 
-def calc(train_p, dev_p,k):
+def calc_knn(train_p, dev_p,k):
     train, attr_train = stringMaker_and_label(copy.deepcopy(train_p))
     dev, attr_dev = stringMaker_and_label(copy.deepcopy(dev_p))
     acc = knn(train, dev, k).knn_a()

@@ -196,12 +196,32 @@ def ID3_k_folds(train_p):
         accuracy +=acc
     avg_acu = "{0:.2f}".format(accuracy / k)
     print("ID3 : " + str(avg_acu))
-    return avg_acu
+    return avg_acu,tree
+
+def calc_ID3(train_p,dev_p):
+    train, att = make_examples(copy.deepcopy(train_p))
+    dev,att_dev = make_examples(copy.deepcopy(dev_p))
+    F2I = parseAttributes(train_p[0])
+    accuracy = 0
+    default, n = max_can_eat(train)
+    mode = "no"
+    if default:
+        mode = "yes"
+    d = ID3(F2I, copy.deepcopy(att),mode, copy.deepcopy(train))
+    tree = d.DTL()
+    acc= ID3.get_accuracy(tree=copy.deepcopy(tree),test=copy.deepcopy(dev),F2I=copy.deepcopy(F2I), attributes=copy.deepcopy(att), default= mode)
+    avg_acu = "{0:.2f}".format(acc)
+    print("ID3 : " + str(avg_acu))
+    return avg_acu,tree
+
+
 
 def write_tree_writer(tree,file):
     with open(file,"a") as f:
         write_tree(tree,f)
     f.close()
+
+
 
 def write_tree(tree,file,i=0):
     subtrees = list(tree.tree)

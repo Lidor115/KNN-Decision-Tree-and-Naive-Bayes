@@ -50,6 +50,17 @@ class NaiveByes:
                 prob_no = f/total_f
                 self.probs_yes[(index,feature)] = prob_yes
                 self.probs_no[(index,feature)] = prob_no
+def calc_Naive_Bayse(train_p,dev_p):
+    train, att = make_examples(copy.deepcopy(train_p))
+    dev, att_dev = make_examples(copy.deepcopy(dev_p))
+    F2I = parseAttributes(train_p[0])
+    naive_bayes = NaiveByes(train, dev, attributes=att, F2I=F2I)
+    acc = naive_bayes.naiveBayes()
+    avg_acu = "{0:.2f}".format(acc)
+    print("Naive Byse : " + str(avg_acu))
+    return avg_acu
+
+
 def Naive_Byse_k_folds(train_p):
     all_ex, att = make_examples(copy.deepcopy(train_p))
     F2I = parseAttributes(train_p[0])
